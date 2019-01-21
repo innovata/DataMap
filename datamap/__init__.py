@@ -15,9 +15,9 @@ DB_v1 = '데이터맵'
 ROOT_PATH = '/Users/sambong/pjts'
 # project level path
 PJT_PATH = f"{ROOT_PATH}/{PJT_NAME}"
+PKG_PATH = f"{ROOT_PATH}/{PJT_NAME}/{PJT_NAME}"
 LIB_PATH = f"{ROOT_PATH}/lib"
-PKG_PATH = f"{PJT_PATH}/{PJT_NAME}"
-DATA_PATH = f"{PJT_PATH}/data"
+DATA_PATH = f"{ROOT_PATH}/{PJT_NAME}/data"
 
 import sys
 sys.path.append(LIB_PATH)
