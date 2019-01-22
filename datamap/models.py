@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 
 class Datum:
-    
+
     def __init__(self, name, url, keywords=[]):
         self.name = name
         self.url = url
@@ -30,14 +30,14 @@ class Data:
         d = Datum(name, url, keywords)
         self.data.append(d.get_doc())
 
+    def print_data(self):
+        print('\n\n data :\n')
+        pp.pprint(self.data)
+
     def insert_many(self):
         """http://api.mongodb.com/python/current/api/pymongo/results.html#pymongo.results.InsertManyResult
         """
         return db[self.tblname].insert_many(self.data)
-
-    def print_data(self):
-        print('\n\n data :\n')
-        pp.pprint(self.data)
 
     def find(self, filter=None, projection=None):
         cursor = db[self.tblname].find(filter, projection)
