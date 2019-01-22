@@ -10,6 +10,10 @@ class Safari:
         self.meaningless_folders = ['책갈피 메뉴','읽기 목록'] + self.sections
         self.folder_tag = 'h3'
 
+    def collect(self):
+        self.parse()
+        self.insert_many()
+
     def parse(self):
         with open(file=self.filepath, mode='r') as f:
             text = f.read()
@@ -35,9 +39,9 @@ class Safari:
                     if u in foldernames: foldernames.remove(u)
 
                 d.stack(name=link.string, url=link['href'], keywords=foldernames)
-        d.print()
+        d.print_data()
 
-    def collect(self):
+    def insert_many(self):
         d.insert_many()
 
 def main():
