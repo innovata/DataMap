@@ -43,6 +43,11 @@ class Data:
         cursor = db[self.tblname].find(filter, projection)
         return list(cursor)
 
+    def docs_to_csv(self, filename):
+        docs = self.find(projection={'_id':0})
+        df = pd.DataFrame(docs)
+        df.to_csv(f"{DATA_PATH}/{filename}")
+
 
     def __저장_중복제거_백업(self):
         """d = dic.copy()
