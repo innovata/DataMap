@@ -1,7 +1,7 @@
 
 from datamap import *
 from bs4 import BeautifulSoup
-
+import itertools
 
 class Datum:
 
@@ -14,12 +14,14 @@ class Datum:
     def get_doc(self):
         return {'name':self.name, 'url':self.url, 'keywords':self.keywords}
 
-
 class Data:
 
     def __init__(self):
         self.tblname = 'data'
         self.data = []
+
+    def process_analysis():
+        print('')
 
     def open_file(self):
         with open(file=self.filepath, mode='r') as f:
@@ -47,7 +49,6 @@ class Data:
         docs = self.find(projection={'_id':0})
         df = pd.DataFrame(docs)
         df.to_csv(f"{DATA_PATH}/{filename}")
-
 
     def __저장_중복제거_백업(self):
         """d = dic.copy()
@@ -122,7 +123,115 @@ class Localfile(Data):
 
     Data.modeltype = 'localfile'
 
-
 class Course(Data):
 
     Data.modeltype = 'course'
+
+class Keyword(Data):
+
+    def __init__(self):
+        self.tblname = 'keyword'
+        self.keywords = []
+
+    def process(self):
+        print('Flow.')
+
+    def load_data(self):
+        d = Data()
+        docs = d.find(projection={'_id':0})
+        return pd.DataFrame(docs)
+
+    def get_unique_keywords(self):
+        df = self.load_data()
+        keywords_li = list(df.keywords)
+        uq_keywords = []
+        for keywords in keywords_li:
+            for keyword in keywords:
+                uq_keywords.append(keyword)
+        self.keywords = sorted(set(uq_keywords))
+
+    def get_keywords_frequency(self):
+        df = self.load_data()
+        keywords_li = list(df.keywords)
+        li = []
+        for keywords in keywords_li:
+            for keyword in keywords:
+                li.append(keyword)
+        df = pd.DataFrame({'keyword':li, 'cnt':1})
+        gsum = df.groupby('keyword').sum()
+        gsum['keyword'] = gsum.index
+        gsum = gsum.rename(columns={'cnt':'freq'})
+        self.keywords_freq = gsum.to_dict('records')
+
+    def add_keywords_combinations_col(self):
+        def combinations(x):
+            if isinstance(x, list):
+                if len(x) > 1:
+                    tuples = list(itertools.combinations(set(x), 2))
+                    return tuples#[list(tuple) for tuple in tuples]
+
+        df = self.load_data()
+        df = df.assign(kw_combs= lambda x: x.keywords.apply(combinations))
+        # 필터링이 안되네....
+        #df = df[ df['kw_combs'] != None ]
+        self.df = df
+
+    def get_keywords_combinations(self):
+        self.add_keywords_combinations_col()
+        kw_combs_li = list(self.df.kw_combs)
+        uq_kw_combs = []
+        for kw_combs in kw_combs_li:
+            if (kw_combs is not None) and isinstance(kw_combs, list):
+                for kw_comb in kw_combs:
+                    uq_kw_combs.append(kw_comb)
+
+        self.kw_combinations = list(set(uq_kw_combs))
+
+    def calc_combination_strength(self):
+
+        class Combination:
+
+            def __init__(self, combination):
+                self.comb = combination
+                self.strength = 0
+
+            def calc_strength(self, x):
+                if isinstance(x, list) and (self.comb in x):
+                    self.strength += 1
+
+            def print(self):
+                print(f"\n\n combination : {self.comb}")
+                print(f"\n strength : {self.strength}")
+
+            def get_doc(self):
+                return {'combination':self.comb, 'strength':self.strength}
+
+        self.add_keywords_combinations_col()
+        df = self.df
+        self.get_keywords_combinations()
+        self.combination_strengths = []
+        for combination in self.kw_combinations:
+            c = Combination(combination)
+            df.kw_combs.apply(lambda x: c.calc_strength(x))
+            self.combination_strengths.append(c.get_doc())
+
+    def make_keyword_relation(self):
+        self.calc_combination_strength()
+        relations = pd.DataFrame(self.combination_strengths)
+        relations['keyword'] = relations.combination.apply(lambda x: x[0])
+        relations['name'] = relations.combination.apply(lambda x: x[1])
+        del(relations['combination'])
+
+        self.get_keywords_frequency()
+        keywords = pd.DataFrame(self.keywords_freq).rename(columns={'keyword':'name'}).to_dict('records')
+        keyword_relations = []
+        for keyword in keywords:
+            df = relations[ relations.keyword == keyword['name'] ]
+            if len(df) is 0:
+                keyword['relations'] = []
+            else:
+                del(df['keyword'])
+                keyword['relations'] = df.to_dict('records')
+            keyword_relations.append(keyword)
+
+        self.keyword_relations = keyword_relations

@@ -1,7 +1,7 @@
 
 import unittest
 from datamap import *
-from datamap.models import Bookmark
+from datamap.models import Bookmark, Data
 
 
 class DataTestCase(unittest.TestCase):
@@ -10,6 +10,11 @@ class DataTestCase(unittest.TestCase):
         b = Bookmark(filepath="/Users/sambong/pjts/datamap/data/Safari-책갈피__2019-01-20.html")
         b.open_file()
         self.assertFalse(b.text is None)
+
+    def test_get_unique_keywords(self):
+        d = Data()
+        keywords = d.get_unique_keywords()
+        self.assertTrue(isinstance(keywords, list))
 
 
 class BookmarkTestCase(unittest.TestCase):
