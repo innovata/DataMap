@@ -1,7 +1,8 @@
 
 import unittest
 from datamap import *
-from datamap.models import Bookmark, Data
+from datamap.models import Data
+from datamap.sources import Bookmark
 
 
 class DataTestCase(unittest.TestCase):
